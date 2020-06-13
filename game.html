@@ -1,0 +1,222 @@
+<!DOCTYPE html> <!--This tell web that this doc is written in HTML5-->
+<html>
+  <head>
+    <meta charset="utf-8"> <title> Arcade Game </title>
+  </head>
+  <body>
+	<!--create an HTML Canvas to display graphics on-->
+	<canvas id="gamecanvas" width="800" Height="600"></canvas>
+	<h1>Arcade Game using HTML</h1>
+  </body>
+	<script>
+	var canvas; //for info about the dimensions of display area;
+	var canvasContext; //underline graphical info that we draw;
+	var ballX= 120;   //ball's horizontal position;
+	var ballY= 20;		//ball's vertical position
+ 	var ballSpeedX= 06;		var ballSpeedY= 06;
+	
+	var paddle1Y= 250;		var PDL_HEIGHT= 100;
+	var paddle2Y= 250;		var PDL_THICK= 10;
+	
+	var p1score= 0;		var p2score= 0;
+	const WIN_SCORE= 11;
+	
+	var endGame= false;
+	
+	function calculateMousePos(evt){
+			var rect= canvas.getBoundingClientRect();
+			var root= document.documentElement;
+			var mouseX = evt.clientX- rect.left- root.scrollLeft;
+			var mouseY = evt.clientY- rect.top- root.scrollTop;
+			return{ x:mouseX, y:mouseY};
+	}
+	
+	function handleMouseClick(evt){
+		if(endGame){
+				p1score= 0;	p2score= 0;	endGame= false;
+		}
+	}
+	
+	window.onload = function(){
+		console.log("Arcade Ball Game");
+		canvas = document.getElementById('gamecanvas');
+		canvasContext = canvas.getContext('2d');	
+		
+		var framesPerSeocnd = 40;  //note: we declare this function inside the function, because we need this function only whenever this function call; 
+		
+		//To control the speed of animation;
+		setInterval(function(){moveShape();  drawShape();}, 1000/framesPerSeocnd);  //1000 is in milliseconds= 1 sec;	
+		
+		canvas.addEventListener('mousedown',handleMouseClick);
+		
+		canvas.addEventListener('mousemove',
+			function(evt){
+				var mousePos= calculateMousePos(evt);
+				paddle1Y= mousePos.y-(PDL_HEIGHT/2);
+			});	
+	}	
+	
+	function ballReset(){
+			if(p1score >= WIN_SCORE || p2score >= WIN_SCORE){
+					//p1score= 0;	p2score= 0;
+					endGame= true; 
+			}
+		ballSpeedX= -ballSpeedX;
+		ballX= canvas.width/2;
+		ballX= canvas.height/2;
+	}
+	
+	function drawNet(){
+		for(var i=0; i<=canvas.height; i+=40){
+			colorRect(canvas.width/2-1, i, 2, 20, 'yellow');
+		}
+	}
+	
+	function drawShape(){     
+		//main window
+		colorRect(0, 0, canvas.width, canvas.height, 'black');
+		
+		if(endGame){
+			canvasContext.fillStyle = 'white';
+			if(p1score >= WIN_SCORE){
+				canvasContext.fillText("You won! this game",350,250);
+			} 
+			else if(p2score >= WIN_SCORE){
+				canvasContext.fillText("computer won! this game",350,250);
+			}
+			canvasContext.fillText("Click to start new game",350,500);
+			return;
+		}
+		
+		drawNet();
+		
+		//left paddle
+		colorRect(0, paddle1Y, PDL_THICK, PDL_HEIGHT, 'Blue');  
+		//Right paddle
+		colorRect(canvas.width-PDL_THICK, paddle2Y, PDL_THICK, 100, 'Blue');  
+		//draw the round ball
+		colorCircle(ballX, ballY, 10, 'white'); 
+		//create scoreboard
+		canvasContext.fillText(p1score,100,100);
+		canvasContext.fillText(p2score,canvas.width-100,100);
+	}
+	
+	function colorCircle(centerX, centerY, radius, drawColor){
+		canvasContext.fillStyle = drawColor;
+		canvasContext.beginPath();
+		canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, true);
+		canvasContext.fill();
+	}
+	
+	function colorRect(leftX, topY, width, height, drawColor){
+			canvasContext.fillStyle = drawColor;      
+			canvasContext.fillRect(leftX, topY, width, height);
+	}
+	
+	function automateMove(){
+		var paddle2YCenter= paddle2Y+ (PDL_HEIGHT/2);
+			if(paddle2YCenter < ballY-35){
+				paddle2Y += 07;
+			}
+		else paddle2Y -= 07;
+	}
+	
+	function moveShape(){
+			if(endGame){ return; }
+		automateMove();
+		ballX += ballSpeedX;  //move the rect in x position i.e. width;
+		
+			if(ballX < 20){ 
+				if(ballY > paddle1Y && ballY < paddle1Y+PDL_HEIGHT){
+					ballSpeedX= -ballSpeedX;		
+					var deltaY= ballY-(paddle1Y-PDL_HEIGHT/2);
+					ballSpeedY= deltaY * 0.10;
+				}
+				else{ 
+					p2score++;  //Must be before ballReset();   
+					ballReset();
+				}
+			}  //-ve x -ve = +ve
+
+			if(ballX > canvas.width-20){
+				if(ballY > paddle2Y && ballY < paddle2Y+PDL_HEIGHT){
+						ballSpeedX= -ballSpeedX;
+						var deltaY= ballY-(paddle2Y-PDL_HEIGHT/2);
+						ballSpeedY= deltaY * 0.10;
+				}
+				else{ 
+					p1score++; //Must be before ballReset();
+					ballReset();
+				}
+			} 
+		
+		ballY += ballSpeedY;  //move the rect in x position i.e. Width;
+		ballX += ballSpeedX;  //move the rect in y position i.e. Height;
+		
+		if(ballY > canvas.height-20){ ballSpeedY= -ballSpeedY;} 
+		if(ballY < 20){ ballSpeedY= -ballSpeedY;}  //-ve x -ve = +ve
+	}
+	</script>
+  <!--<link rel="stylesheet" href="game-script.js" type="text/css" media="screen" />-->
+</html>
+
+
+<!--
+	Functions list:
+		 calculateMousePos(evt)
+		 ballReset()
+		 drawNet()
+		 drawShape()
+		 colorCircle(centerX, centerY, radius, drawColor)
+		 colorRect(leftX, topY, width, height, drawColor)
+		 automateMove()
+		 moveShape()
+
+!Note: use the Camel notation convetion in js;
+	//fillStyle is case sensitive, S is capital
+	//In drawShape 'S' is capitalize
+
+//ballSpeedX++;
+
+//Brief practice with 2d coordinates on canvas
+		canvasContext.fillStyle = 'white';
+		canvasContext.fillRect(350,250,100,100);  //box in center
+		//0, 0 are x, y coordinates of Top-left corner
+		//Overlap and draw order in code
+		canvasContext.fillStyle = 'red';
+		canvasContext.fillRect(ballX,240,10,10);
+
+//Calling a function multiple times
+		drawShape();  //It becomes a label. Call it anywhere in the code;
+		drawShape();
+		drawShape();
+
+//for position Y-axis 
+	var ballY= 30;   //use function drawShape to move the ball y-axis;
+	ballY+= 05;   //move the rect in y position i.e. height
+
+//just for experiment
+		canvasContext.fillStyle = 'grey';
+		canvasContext.fillRect(ballX,ballY,ballX, ballY);
+		
+		//animation of changing width instead of position
+		canvasContext.fillStyle = 'Yellow';
+		canvasContext.fillRect(30,180,ballX,20);
+		
+		//this'll change the orange rect in both the position;
+		canvasContext.fillStyle = 'orange';
+		canvasContext.fillRect(30,280,ballX, ballY);
+
+//normal calling
+	function callBoth(){moveShape();	drawShape();}
+	
+//simple rect ball
+	colorRect(ballX, 240, 10, 10, 'red');
+	
+//Just for experiment
+	console.log(ballX);
+	
+
+					
+
+-->
